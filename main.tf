@@ -2,10 +2,6 @@ provider "aws" {
   region = var.aws_region
 }
 
-provider "template" {
-  version = "2.1.2"
-}
-
 resource "aws_vpc" "vpc" {
   cidr_block = "172.32.0.0/16"
 
@@ -52,7 +48,10 @@ resource "aws_route_table" "rt_private" {
 resource "aws_subnet" "subnet_public" {
   vpc_id     = aws_vpc.vpc.id
   cidr_block = "172.32.1.0/24"
-  //map_public_ip_on_launch = true
+  /*
+  It's possible set the public ip option on the subnet or in the EC2 instance
+  map_public_ip_on_launch = true
+  */
 
   depends_on = [aws_route_table.rt_public]
 
@@ -163,34 +162,4 @@ resource "aws_security_group_rule" "sg_outbound" {
   from_port         = 80
   to_port           = 80
   security_group_id = aws_security_group.sg.id
-}
-
-resource "aws_key_pair" "example" {
-  key_name   = var.key_name
-  public_key = file(var.public_key_path)
-}
-
-data "template_file" "init" {
-  template = file(var.user_data_path)
-
-  vars = {
-    my_id = "123"
-  }
-
-}
-
-resource "aws_instance" "example" {
-  key_name                    = aws_key_pair.example.key_name
-  ami                         = "ami-098f16afa9edf40be"
-  instance_type               = "t2.micro"
-  subnet_id                   = aws_subnet.subnet_public.id
-  vpc_security_group_ids      = [aws_security_group.sg.id]
-  associate_public_ip_address = true
-  user_data                   = data.template_file.init.rendered
-  depends_on                  = [aws_internet_gateway.igw]
-
-  tags = {
-    Name = "instance_terraform"
-  }
-
 }
