@@ -15,5 +15,5 @@ variable "private_key_path" {
 }
 
 variable "user_data_path" {
-  default = "user-data.sh"
+  default = "user-data.tpl"
 }

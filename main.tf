@@ -170,6 +170,15 @@ resource "aws_key_pair" "example" {
   public_key = file(var.public_key_path)
 }
 
+data "template_file" "init" {
+  template = file(var.user_data_path)
+
+  vars = {
+    my_id = "123"
+  }
+
+}
+
 resource "aws_instance" "example" {
   key_name                    = aws_key_pair.example.key_name
   ami                         = "ami-098f16afa9edf40be"
@@ -177,7 +186,7 @@ resource "aws_instance" "example" {
   subnet_id                   = aws_subnet.subnet_public.id
   vpc_security_group_ids      = [aws_security_group.sg.id]
   associate_public_ip_address = true
-  user_data                   = file(var.user_data_path)
+  user_data                   = data.template_file.init.rendered
   depends_on                  = [aws_internet_gateway.igw]
 
   tags = {
